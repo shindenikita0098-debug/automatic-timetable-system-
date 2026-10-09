@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Table Scheduling System</title>
+
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+header {
+  background: #163b70;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+nav {
+  background: #24569a;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: center;
+}
+button, nav button {
+  padding: 10px 13px;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+}
+nav button { background: #fff; color: #163b70; }
+main { max-width: 1100px; margin: auto; padding: 16px; }
+section {
+  background: white;
+  padding: 18px;
+  margin-bottom: 18px;
+  border-radius: 9px;
+  box-shadow: 0 2px 7px #00000012;
+}
+input, select {
+  width: 100%;
+  padding: 11px;
+  margin: 5px 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  background: white;
+}
+label { font-weight: bold; }
+.primary { background: #2563eb; }
+.danger { background: #dc2626; }
+.hidden { display: none !important; }
+.message { color: #b91c1c; }
+.table-wrap { overflow-x: auto; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+}
+th, td {
+  border: 1px solid #cbd5e1;
+  padding: 10px;
+  text-align: left;
+}
+th { background: #dbeafe; }
+.small { font-size: 13px; color: #64748b; }
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Time Table Scheduling System</h1>
+  <p>Education &amp; College Management</p>
+</header>
+
+<nav id="menu" class="hidden">
+  <button onclick="show('home')">Home</button>
+  <button onclick="show('teachers')">Add Teachers</button>
+  <button onclick="show('subjects')">Add Subjects</button>
+  <button onclick="show('classes')">Class/Division</button>
+  <button onclick="show('rooms')">Add Rooms</button>
+  <button onclick="show('slots')">Time Slots</button>
+  <button onclick="show('schedule')">Create Timetable</button>
+  <button onclick="show('view')">View Timetable</button>
+  <button onclick="logout()">Logout</button>
+</nav>
+
+<main>
+  <section id="login">
+    <h2>Admin Login</h2>
+    <label>Login ID</label>
+    <input id="loginId" placeholder="Enter admin ID">
+    <label>Password</label>
+    <input id="loginPassword" type="password"
+           placeholder="Enter password">
+    <button class="primary" onclick="login()">Login</button>
+    <p id="loginMessage" class="message"></p>
+    <p class="small">Project demo credentials: admin / 12345</p>
+  </section>
+
+  <section id="home" class="hidden">
+    <h2>Welcome to the Admin Dashboard</h2>
+    <p>Add college details first, then create and print your timetable.</p>
+    <p id="summary"></p>
+  </section>
+
+  <section id="teachers" class="hidden">
+    <h2>Add Teachers</h2>
+    <form onsubmit="addRecord(event,'teachers','teacherName')">
+      <label>Teacher Name</label>
+      <input id="teacherName" required placeholder="e.g. Priya Patil">
+      <button class="primary">Add Teacher</button>
+    </form>
+    <div id="teachersList"></div>
+  </section>
+
+  <section id="subjects" class="hidden">
+    <h2>Add Subjects</h2>
+    <form onsubmit="addRecord(event,'subjects','subjectName')">
+      <label>Subject Name</label>
+      <input id="subjectName" required placeholder="e.g. Python">
+      <button class="primary">Add Subject</button>
+    </form>
+    <div id="subjectsList"></div>
+  </section>
+
+  <section id="classes" class="hidden">
+    <h2>Add Class / Division</h2>
+    <form onsubmit="addRecord(event,'classes','className')">
+      <label>Class and Division</label>
+      <input id="className" required placeholder="e.g. SYBSc IT - A">
+      <button class="primary">Add Class</button>
+    </form>
+    <div id="classesList"></div>
+  </section>
+
+  <section id="rooms" class="hidden">
+    <h2>Add Rooms</h2>
+    <form onsubmit="addRecord(event,'rooms','roomName')">
+      <label>Room Number / Name</label>
+      <input id="roomName" required placeholder="e.g. Room 101">
+      <button class="primary">Add Room</button>
+    </form>
+    <div id="roomsList"></div>
+  </section>
+
+  <section id="slots" class="hidden">
+    <h2>Add Time Slots</h2>
+    <form onsubmit="addSlot(event)">
+      <label>Lecture / Break Name</label>
+      <input id="slotName" required placeholder="e.g. Lecture 1">
+      <label>Start Time</label>
+      <input id="slotStart" type="time" required>
+      <label>End Time</label>
+      <input id="slotEnd" type="time" required>
+      <button class="primary">Add Time Slot</button>
+    </form>
+    <div id="slotsList"></div>
+  </section>
+
+  <section id="schedule" class="hidden">
+    <h2>Create Timetable</h2>
+    <p class="small">
+      Select the details for each lecture. Entries are checked
+      for teacher, class, and room clashes.
+    </p>
+    <form onsubmit="addLecture(event)">
+      <label>Day</label>
+      <select id="day" required>
+        <option>Monday</option><option>Tuesday</option>
+        <option>Wednesday</option><option>Thursday</option>
+        <option>Friday</option><option>Saturday</option>
+      </select>
+
+      <label>Class / Division</label>
+      <select id="entryClass" required></select>
+
+      <label>Time Slot</label>
+      <select id="entrySlot" required></select>
+
+      <label>Subject</label>
+      <select id="entrySubject" required></select>
+
+      <label>Teacher</label>
+      <select id="entryTeacher" required></select>
+
+      <label>Room</label>
+      <select id="entryRoom" required></select>
+
+      <button class="primary">Add to Timetable</button>
+    </form>
+    <p id="scheduleMessage"></p>
+  </section>
+
+  <section id="view" class="hidden">
+    <h2>View Timetable</h2>
+    <label>Filter by Class / Division</label>
+    <select id="filterClass" onchange="renderTimetable()">
+      <option value="">All Classes</option>
+    </select>
+    <button class="primary" onclick="renderTimetable()">
+      View Timetable
+    </button>
+    <button onclick="window.print()">Print Timetable</button>
+    <div id="timetableOutput" class="table-wrap"></div>
+  </section>
+</main>
+
+<script>
+const keys = ['teachers','subjects','classes','rooms','slots','lectures'];
+const data = {};
+
+keys.forEach(k => {
+  try {
+    data[k] = JSON.parse(localStorage.getItem('tts_' + k)) || [];
+  } catch {
+    data[k] = [];
+  }
+});
+
+function save(k) {
+  localStorage.setItem('tts_' + k, JSON.stringify(data[k]));
+}
+
+function login() {
+  const id = document.getElementById('loginId').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (id === 'admin' && password === '12345') {
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('menu').classList.remove('hidden');
+    show('home');
+  } else {
+    document.getElementById('loginMessage').textContent =
+      'Incorrect login ID or password. Please try again.';
+  }
+}
+
+function logout() {
+  document.getElementById('menu').classList.add('hidden');
+  document.querySelectorAll('main section').forEach(s =>
+    s.classList.add('hidden'));
+  document.getElementById('login').classList.remove('hidden');
+  document.getElementById('loginPassword').value = '';
+}
+
+function show(id) {
+  document.querySelectorAll('main section').forEach(s =>
+    s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  refresh();
+}
+
+function addRecord(event, key, inputId) {
+  event.preventDefault();
+  const value = document.getElementById(inputId).value.trim();
+  if (!value) return;
+  if (data[key].some(x => x.name.toLowerCase() === value.toLowerCase())) {
+    alert('This record already exists.');
+    return;
+  }
+  data[key].push({id: Date.now() + Math.random(), name: value});
+  save(key);
+  event.target.reset();
+  refresh();
+}
+
+function addSlot(event) {
+  event.preventDefault();
+  const name = document.getElementById('slotName').value.trim();
+  const start = document.getElementById('slotStart').value;
+  const end = document.getElementById('slotEnd').value;
+  if (start >= end) {
+    alert('End time must be later than start time.');
+    return;
+  }
+  if (data.slots.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+    alert('This time slot name already exists.');
+    return;
+  }
+  data.slots.push({id: Date.now() + Math.random(), name, start, end});
+  save('slots');
+  event.target.reset();
+  refresh();
+}
+
+function listRecords(key) {
+  const target = document.getElementById(key + 'List');
+  if (key === 'slots') {
+    target.innerHTML = '<ul>' + data.slots.map(s =>
+      `<li>${esc(s.name)} (${esc(s.start)}–${esc(s.end)})
+      <button class="danger" onclick="removeRecord('slots','${s.id}')">
+      Delete</button></li>`).join('') + '</ul>';
+  } else {
+    target.innerHTML = '<ul>' + data[key].map(x =>
+      `<li>${esc(x.name)}
+      <button class="danger" onclick="removeRecord('${key}','${x.id}')">
+      Delete</button></li>`).join('') + '</ul>';
+  }
+}
+
+function removeRecord(key, id) {
+  if (!confirm('Delete this record? Related timetable entries will also be removed.')) return;
+  const ids = data[key].filter(x => String(x.id) === String(id));
+  data[key] = data[key].filter(x => String(x.id) !== String(id));
+
+  if (key === 'teachers') data.lectures = data.lectures.filter(x => !ids.some(r => r.name === x.teacher));
+  if (key === 'subjects') data.lectures = data.lectures.filter(x => !ids.some(r => r.name === x.subject));
+  if (key === 'classes') data.lectures = data.lectures.filter(x => !ids.some(r => r.name === x.className));
+  if (key === 'rooms') data.lectures = data.lectures.filter(x => !ids.some(r => r.name === x.room));
+  if (key === 'slots') data.lectures = data.lectures.filter(x => !ids.some(r => r.name === x.slot));
+
+  save(key);
+  save('lectures');
+  refresh();
+}
+
+function fillSelect(id, records, placeholder) {
+  const select = document.getElementById(id);
+  const previous = select.value;
+  select.innerHTML = `<option value="">${placeholder}</option>` +
+    records.map(x => `<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
+  if (records.some(x => x.name === previous)) select.value = previous;
+}
+
+function refresh() {
+  ['teachers','subjects','classes','rooms','slots'].forEach(listRecords);
+  fillSelect('entryClass', data.classes, 'Select class');
+  fillSelect('entrySubject', data.subjects, 'Select subject');
+  fillSelect('entryTeacher', data.teachers, 'Select teacher');
+  fillSelect('entryRoom', data.rooms, 'Select room');
+  fillSelect('entrySlot', data.slots, 'Select time slot');
+  fillSelect('filterClass', data.classes, 'All Classes');
+  renderTimetable();
+  document.getElementById('summary').textContent =
+    `Teachers: ${data.teachers.length} | Subjects: ${data.subjects.length} | Classes: ${data.classes.length} | Rooms: ${data.rooms.length} | Time slots: ${data.slots.length}`;
+}
+
+function addLecture(event) {
+  event.preventDefault();
+  const entry = {
+    id: Date.now() + Math.random(),
+    day: document.getElementById('day').value,
+    className: document.getElementById('entryClass').value,
+    slot: document.getElementById('entrySlot').value,
+    subject: document.getElementById('entrySubject').value,
+    teacher: document.getElementById('entryTeacher').value,
+    room: document.getElementById('entryRoom').value
+  };
+  const msg = document.getElementById('scheduleMessage');
+
+  if (!entry.className || !entry.slot || !entry.subject ||
+      !entry.teacher || !entry.room) {
+    msg.textContent = 'Please add and select all required records first.';
+    return;
+  }
+
+  const clash = data.lectures.some(x =>
+    x.day === entry.day && x.slot === entry.slot &&
+    (x.className === entry.className ||
+     x.teacher === entry.teacher || x.room === entry.room)
+  );
+
+  if (clash) {
+    msg.textContent =
+      'Conflict: this class, teacher, or room already has a lecture at this day and time.';
+    return;
+  }
+
+  data.lectures.push(entry);
+  save('lectures');
+  msg.textContent = 'Lecture added successfully!';
+  refresh();
+}
+
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;',
+    '"':'&quot;', "'":'&#39;'
+  })[c]);
+}
+
+function renderTimetable() {
+  const output = document.getElementById('timetableOutput');
+  if (!output) return;
+
+  const filter = document.getElementById('filterClass')?.value || '';
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  const entries = data.lectures
+    .filter(x => !filter || x.className === filter)
+    .sort((a,b) => days.indexOf(a.day) - days.indexOf(b.day) ||
+      (data.slots.find(s => s.name === a.slot)?.start || '')
+      .localeCompare(data.slots.find(s => s.name === b.slot)?.start || ''));
+
+  if (!entries.length) {
+    output.innerHTML = '<p>No timetable entries yet. Add your college details and create lectures first.</p>';
+    return;
+  }
+
+  output.innerHTML = `<table>
+    <thead><tr>
+      <th>Day</th><th>Time</th><th>Class / Division</th>
+      <th>Subject</th><th>Teacher</th><th>Room</th><th>Action</th>
+    </tr></thead><tbody>` +
+    entries.map(x => {
+      const slot = data.slots.find(s => s.name === x.slot);
+      return `<tr>
+        <td>${esc(x.day)}</td>
+        <td>${esc(slot ? slot.start + '–' + slot.end : x.slot)}</td>
+        <td>${esc(x.className)}</td><td>${esc(x.subject)}</td>
+        <td>${esc(x.teacher)}</td><td>${esc(x.room)}</td>
+        <td><button class="danger" onclick="deleteLecture('${x.id}')">Delete</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
+}
+
+function deleteLecture(id) {
+  if (!confirm('Delete this timetable entry?')) return;
+  data.lectures = data.lectures.filter(x => String(x.id) !== String(id));
+  save('lectures');
+  refresh();
+}
+
+refresh();
+</script>
+</body>
+</html>
